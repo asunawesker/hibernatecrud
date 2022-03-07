@@ -1,6 +1,7 @@
 
 package org.uv.hibernatecrud;
 
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
@@ -10,14 +11,38 @@ import org.hibernate.cfg.Configuration;
  */
 public class HibernateUtils {
     // HIBERNATE 5    
-    // When a method is defined as synchronized then only one thread can be executing it at a time.
-    public static SessionFactory factory;
+    private SessionFactory sessionFactory;
+    public static HibernateUtils hibernateUtils;
+    private Session session;
 
-    public static synchronized SessionFactory getSessionFactory() {
-        if (factory == null) {
-            factory = new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
+    private HibernateUtils() {}
+
+    private synchronized SessionFactory getSessionFactory() {
+        if (sessionFactory == null) {
+            sessionFactory = new Configuration().configure("hibernate.cfg.xml").
+                    buildSessionFactory();
         }
-        return factory;
-    }     
+        return sessionFactory;
+    }
     
+    public static HibernateUtils getInstance(){
+        if (hibernateUtils == null) 
+            hibernateUtils = new HibernateUtils();                   
+        return hibernateUtils;
+    }
+    
+    private Session openSession(){
+        session = getSessionFactory().openSession();
+        return session;
+    }
+    
+    private void closeSession(){
+        session.close();
+    }  
+    
+    public boolean execute(TransactionDb transaction) {
+        boolean response = transaction.execute(openSession());
+        closeSession();
+        return response;
+    }
 }

@@ -1,7 +1,11 @@
 
 package org.uv.hibernatecrud;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 
@@ -11,50 +15,140 @@ import org.hibernate.Session;
  */
 public class DaoEmployee implements IDao<Employee>{
     
-    Session session;
+    HibernateUtils session;
 
     public DaoEmployee() {
-        session = HibernateUtils.getSessionFactory().openSession(); 
+        session = HibernateUtils.getInstance(); 
     }        
 
     @Override
     public void save(Employee employee) {
-        session.beginTransaction();
-        session.save(new Employee(employee.getFullname(), employee.getAddress(), employee.getDepartment()));
-        session.getTransaction().commit();
-        session.close();
+        TransactionDb t;
+        
+        t = new TransactionDb<Employee>() {
+            @Override
+            public boolean execute(Session session) {
+                boolean response = false;                
+                try {
+                    session.beginTransaction();
+                    session.save(new Employee(employee.getFullname(), employee.getAddress(), employee.getDepartment()));
+                    session.getTransaction().commit();
+                    response = true;                     
+                 } catch (HibernateException ex) {
+                     Logger.getLogger(DaoDepartment.class.getName()).log(Level.SEVERE, null, ex);
+                 }
+                 
+                 return response;
+             }
+        };      
+        
+        session.execute(t);          
     }
 
     @Override
     public List<Employee> read() {
-        session.beginTransaction();
-        Query query = (Query) session.createQuery("FROM Employee");
-        session.close();
-        return (List<Employee>) query.list();
+        List<Employee> lstEmployee = new ArrayList<>();
+        TransactionDb t;
+        
+        t = new TransactionDb<Employee>() {
+            @Override
+            public boolean execute(Session session) {
+                boolean response = false;                
+                try {
+                    session.beginTransaction();
+                    Query query = (Query) session.createQuery("FROM Employee");
+                    for (Object employee : query.list()) {
+                        lstEmployee.add((Employee) employee);                        
+                    }
+                    response = true;                     
+                 } catch (HibernateException ex) {
+                     Logger.getLogger(DaoDepartment.class.getName()).log(Level.SEVERE, null, ex);
+                 }
+                 
+                 return response;
+             }
+        };    
+        
+        session.execute(t);   
+        
+        return lstEmployee;
     }
     
     @Override
     public List<Employee> readById(Employee employee){
-        session.beginTransaction();
-        Query query = (Query) session.createQuery("FROM Employee WHERE id=:id");
-        query.setLong("id", employee.getId());
-        session.close();
-        return (List<Employee>) query.list();
+        List<Employee> lstEmployee = new ArrayList<>();
+        TransactionDb t;
+        
+        t = new TransactionDb<Department>() {
+            @Override
+            public boolean execute(Session session) {
+                boolean response = false;                
+                try {
+                    session.beginTransaction();
+                    Query query = (Query) session.createQuery("FROM Employee WHERE id=:id");
+                    query.setLong("id", employee.getId());
+                    for (Object employee : query.list()) {
+                        lstEmployee.add((Employee) employee);                        
+                    }
+                    response = true;                     
+                 } catch (HibernateException ex) {
+                     Logger.getLogger(DaoDepartment.class.getName()).log(Level.SEVERE, null, ex);
+                 }
+                 
+                 return response;
+             }
+        };    
+        
+        session.execute(t);   
+        
+        return lstEmployee;
     }
 
     @Override
     public void delete(Employee employee) {
-        session.beginTransaction();
-        session.delete(new Employee(employee.getId()));
-        session.getTransaction().commit();
-        session.close();
+        TransactionDb t;
+        
+        t = new TransactionDb<Employee>() {
+            @Override
+            public boolean execute(Session session) {
+                boolean response = false;                
+                try {
+                    session.beginTransaction();
+                    session.delete(new Employee(employee.getId()));
+                    session.getTransaction().commit();
+                    response = true;                     
+                 } catch (HibernateException ex) {
+                     Logger.getLogger(DaoDepartment.class.getName()).log(Level.SEVERE, null, ex);
+                 }
+                 
+                 return response;
+             }
+        };      
+        
+        session.execute(t);                     
     }
 
     @Override
     public void updated(Employee employee) {
-        session.beginTransaction();
-        session.update(new Employee(employee.getId(), employee.getAddress()));
-        session.getTransaction().commit();
-        session.close();
+        TransactionDb t;
+        
+        t = new TransactionDb<Employee>() {
+            @Override
+            public boolean execute(Session session) {
+                boolean response = false;                
+                try {
+                    session.beginTransaction();
+                    session.update(new Employee(employee.getId(), employee.getAddress()));
+                    session.getTransaction().commit();
+                    response = true;                     
+                 } catch (HibernateException ex) {
+                     Logger.getLogger(DaoDepartment.class.getName()).log(Level.SEVERE, null, ex);
+                 }
+                 
+                 return response;
+             }
+        };      
+        
+        session.execute(t);   
     }
 }
